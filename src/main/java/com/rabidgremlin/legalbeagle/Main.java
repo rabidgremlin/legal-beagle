@@ -7,7 +7,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Unmarshaller;
 
-import com.rabidgremlin.legalbeagle.maven.Model;
+import com.rabidgremlin.legalbeagle.xmlbindings.Model;
 
 //-Dhttp.proxyHost=10.0.0.100 -Dhttp.proxyPort=8800
 
@@ -19,7 +19,7 @@ public class Main
 	{
 	  //HttpURLConnection.setFollowRedirects(true);
 
-	  JAXBContext jc = JAXBContext.newInstance("com.rabidgremlin.legalbeagle.maven");
+	  JAXBContext jc = JAXBContext.newInstance("com.rabidgremlin.legalbeagle.xmlbindings");
 	  Unmarshaller u = jc.createUnmarshaller();
 
 	  //URL url = new URL("http://search.maven.org/remotecontent?filepath=com/jolira/guice/3.0.0/guice-3.0.0.pom");
