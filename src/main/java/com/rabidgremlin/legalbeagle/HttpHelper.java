@@ -1,9 +1,11 @@
 package com.rabidgremlin.legalbeagle;
 
 import java.io.IOException;
+import java.io.StringReader;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.http.HttpHost;
@@ -35,13 +37,54 @@ public class HttpHelper
 
   }
 
+  private JAXBElement<Model> unMarshallPom(String pom)
+  {
+	try
+	{
+	  return (JAXBElement<Model>) u.unmarshal(new StringReader(pom));
+	}
+	catch (javax.xml.bind.UnmarshalException e)
+	{
+	  //System.out.println(e);
+	  // return null;
+
+	  if (e.getMessage().startsWith("unexpected element (uri:\"\", local:\"project\")"))
+	  {
+		try
+		{
+		  pom = pom.replaceFirst("<project>", "<project xmlns=\"http://maven.apache.org/POM/4.0.0\">");
+		  
+		  //System.out.println("***POM is " + pom);
+		  
+		  return (JAXBElement<Model>) u.unmarshal(new StringReader(pom));
+		}
+		catch (Exception ex)
+		{
+		  e.printStackTrace();
+		  return null;
+		}
+	  }
+	  else
+	  {
+		e.printStackTrace();
+		return null;
+	  }
+
+	}
+	catch (JAXBException e)
+	{
+	  return null;
+	}
+
+  }
+
   public Model getPom(MavenArtifact mavenArtifact) throws Exception
   {
 	String requestUrl = "http://search.maven.org/remotecontent?filepath=" + mavenArtifact.getGroupId().replaceAll("\\.", "/") + "/"
 		+ mavenArtifact.getArtifactId() + "/" + mavenArtifact.getVersion() + "/" + mavenArtifact.getArtifactId() + "-"
 		+ mavenArtifact.getVersion() + ".pom";
 
-	//System.out.println("url:" + requestUrl);
+	// System.out.println("url:" + requestUrl);
 
 	// URL url = new
 	// URL("http://search.maven.org/remotecontent?filepath=com/jolira/guice/3.0.0/guice-3.0.0.pom");
@@ -49,10 +92,10 @@ public class HttpHelper
 	// URL url = new
 	// URL("http://repo1.maven.org/maven2/org/eclipse/jetty/jetty-webapp/7.3.0.v20110203/jetty-webapp-7.3.0.v20110203.pom");
 
-	JAXBElement<Model> projectElem = (JAXBElement<Model>) u.unmarshal(executeGet(requestUrl).returnContent().asStream());
+	JAXBElement<Model> projectElem = unMarshallPom(executeGet(requestUrl).returnContent().asString());
 
-	//System.out.println(projectElem.toString());
-	//System.out.println(projectElem.getName());
+	// System.out.println(projectElem.toString());
+	// System.out.println(projectElem.getName());
 
 	return projectElem.getValue();
   }
@@ -64,7 +107,7 @@ public class HttpHelper
 
 	JsonNode root = mapper.readTree(executeGet(requestUrl).returnContent().asStream());
 
-	//System.out.println(root.toString());
+	// System.out.println(root.toString());
 
 	JsonNode doc = root.path("response").path("docs").get(0);
 

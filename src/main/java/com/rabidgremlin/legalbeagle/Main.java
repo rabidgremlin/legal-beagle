@@ -15,14 +15,27 @@ import com.rabidgremlin.legalbeagle.xmlbindings.Model.Licenses;
 public class Main
 {
 
-  private static List<License> getLicense(Model pom)
+  private static List<License> getLicense(HttpHelper httpHelper, Model pom) throws Exception
   {
+	if (pom == null)
+	{
+	  return null;
+	}
+	
 	Licenses licenses = pom.getLicenses();
 
 	if (licenses != null)
-	{
+	{ 
 	  return licenses.getLicense();
 	}
+	
+	
+	if (pom.getParent() != null)
+	{
+	  return getLicense(httpHelper, httpHelper.getPom(new MavenArtifact(pom.getParent().getGroupId(), pom.getParent().getArtifactId(), pom.getParent().getVersion())));
+	}
+	
+	
 	
 	return null;
   }
@@ -69,7 +82,7 @@ public class Main
 			System.out.print(f.getAbsolutePath() + "\t" + fileHash + "\t" + mod.getName());
 			
 			
-			List<License> licenses = getLicense(mod);
+			List<License> licenses = getLicense(httpHelper,mod);
 			if (licenses != null)
 			{
 			  System.out.println(dumpLicenses(licenses));
