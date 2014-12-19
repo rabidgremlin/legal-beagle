@@ -1,13 +1,19 @@
 package com.rabidgremlin.legalbeagle;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import com.rabidgremlin.legalbeagle.maven.MavenArtifact;
+import com.rabidgremlin.legalbeagle.maven.MavenJarIdentifier;
+import com.rabidgremlin.legalbeagle.report.DebugReportWriter;
+import com.rabidgremlin.legalbeagle.report.Report;
+import com.rabidgremlin.legalbeagle.util.FileCollector;
+import com.rabidgremlin.legalbeagle.util.HttpHelper;
 import com.rabidgremlin.legalbeagle.xmlbindings.License;
 import com.rabidgremlin.legalbeagle.xmlbindings.Model;
 import com.rabidgremlin.legalbeagle.xmlbindings.Model.Licenses;
@@ -16,54 +22,25 @@ import com.rabidgremlin.legalbeagle.xmlbindings.Model.Licenses;
 
 public class Main
 {
+  private final static Logger log = LoggerFactory.getLogger(Main.class);
 
-  private static List<License> getLicense(HttpHelper httpHelper, Model pom) throws Exception
-  {
-	if (pom == null)
-	{
-	  return null;
-	}
-
-	Licenses licenses = pom.getLicenses();
-
-	if (licenses != null)
-	{
-	  return licenses.getLicense();
-	}
-
-	if (pom.getParent() != null)
-	{
-	  return getLicense(httpHelper, httpHelper.getPom(new MavenArtifact(pom.getParent().getGroupId(), pom.getParent()
-		  .getArtifactId(), pom.getParent().getVersion())));
-	}
-
-	return null;
-  }
-
-  private static String dumpLicenses(List<License> licenses)
-  {
-	StringBuffer buffer = new StringBuffer();
-
-	for (License license : licenses)
-	{
-	  buffer.append("\t");
-	  buffer.append(license.getName());
-
-	}
-
-	return buffer.toString();
-  }
+  
 
   public static void main(String[] args)
   {
 
+	// set up command line parsing
 	CommandLineOptions cmdOptions = new CommandLineOptions();
 	JCommander jCommander = new JCommander(cmdOptions);
 	jCommander.setProgramName("java -jar legalbeagle.jar");
-	
+
+	// parse and validate command line opts
 	try
 	{
 	  jCommander.parse(args);
+	  
+	  log.info("Scanning {}",cmdOptions.dir);
+	  log.info("Writring output to {}",cmdOptions.outputFile);
 	}
 	catch (ParameterException e)
 	{
@@ -71,57 +48,39 @@ public class Main
 	  System.exit(1);
 	}
 
+	// find and identify licenses
 	try
 	{
-	  // System.out.println(args[0]);
 
+	  // create http helper
 	  HttpHelper httpHelper = new HttpHelper();
 
-	  // Model pom = httpHelper.getPom(new MavenArtifact("com.jolira", "guice",
-	  // "3.0.0"));
+	  // create report object to hold results
+	  Report report = new Report();
 
+	  // scan supplied dir (and sub dirs) for .jar files
 	  FileCollector fc = new FileCollector();
 	  List<File> files = fc.getJars(new File(cmdOptions.dir));
+	    
 
-	  for (File f : files)
-	  {
-		String fileHash = DigestUtils.sha1Hex(new FileInputStream(f));
-
-		try
-		{
-
-		  Model mod = httpHelper.getPom(fileHash);
-
-		  if (mod != null)
-		  {
-			System.out.print(f.getAbsolutePath() + "\t" + fileHash + "\t" + mod.getName());
-
-			List<License> licenses = getLicense(httpHelper, mod);
-			if (licenses != null)
-			{
-			  System.out.println(dumpLicenses(licenses));
-			}
-			else
-			{
-			  System.out.println("\tNo licenses found");
-			}
-
-		  }
-		  else
-		  {
-			System.out.println(f.getAbsolutePath() + "\t" + fileHash + "\tNot Identified");
-		  }
-		}
-		catch (Exception e)
-		{
-		  System.out.println(f.getAbsolutePath() + "\t" + fileHash + "\tERR: " + e.getMessage());
-		}
-
-	  }
+	  // add files to report
+	  report.addFiles(files);	  
+	  
+	  log.info("Found {} files to process",report.getReportItems().size());
+	  
+	  // try identify file using maven and file signatures
+	  MavenJarIdentifier mavenJarIdentifier = new MavenJarIdentifier(httpHelper);
+	  mavenJarIdentifier.identifyFiles(report);
+	  
+	  // write the report
+	  DebugReportWriter reportWriter = new DebugReportWriter();
+	  reportWriter.generateReport(cmdOptions.outputFile, report);
+	  
+	  log.info("Done!");
 	}
 	catch (Exception e)
 	{
-	  e.printStackTrace();
+	  log.error("Oops!",e);
 	}
 
   }
