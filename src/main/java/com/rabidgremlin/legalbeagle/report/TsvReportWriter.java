@@ -16,19 +16,53 @@
  */
 package com.rabidgremlin.legalbeagle.report;
 
+import java.io.File;
+import java.io.PrintWriter;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DebugReportWriter implements ReportWriter
+public class TsvReportWriter implements ReportWriter
 {
-  private final Logger log = LoggerFactory.getLogger(DebugReportWriter.class);
+  private final Logger log = LoggerFactory.getLogger(TsvReportWriter.class);
 
   public void generateReport(String output, Report report) throws Exception
   {
-     for (ReportItem reportItem:report.getReportItems())
-     {
-       log.info("{}",reportItem);
-     }
+	log.info("Writing report to {}...", output);
+
+	PrintWriter out = new PrintWriter(new File(output));
+	
+	out.println("File\tStatus\tDescription\tLicense(s)\tError");
+
+	for (ReportItem reportItem : report.getReportItems())
+	{
+	  out.print(reportItem.getFile().getAbsolutePath());
+	  out.print("\t");
+	  out.print(reportItem.getReportItemStatus());
+	  out.print("\t");	  
+
+	  if (reportItem.getDescription() != null)
+	  {
+		out.print(reportItem.getDescription());
+	  }
+	  out.print("\t");
+
+	  out.print(StringUtils.join(reportItem.getLicenses(), "; "));
+	  out.print("\t");
+	  
+	  if (reportItem.getError() != null)
+	  {
+		out.print(reportItem.getError());
+	  }
+	  
+	  
+	  out.println();
+
+	}
+
+	out.flush();
+	out.close();
   }
 
 }

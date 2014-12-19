@@ -1,3 +1,19 @@
+/* 
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ */
 package com.rabidgremlin.legalbeagle.maven;
 
 import java.io.File;
@@ -5,6 +21,7 @@ import java.io.FileInputStream;
 import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,20 +66,6 @@ public class MavenJarIdentifier
 	return null;
   }
 
-  private String dumpLicenses(List<License> licenses)
-  {
-	StringBuffer buffer = new StringBuffer();
-
-	for (License license : licenses)
-	{
-	  buffer.append("\t");
-	  buffer.append(license.getName());
-
-	}
-
-	return buffer.toString();
-  }
-
   public void identifyFiles(Report report) throws Exception
   {
 
@@ -74,28 +77,30 @@ public class MavenJarIdentifier
 
 	  try
 	  {
-		log.info("Processing {}...",f.getAbsoluteFile());
-		
+		log.info("Processing {}...", f.getAbsoluteFile());
+
 		Model mod = httpHelper.getPom(fileHash);
 
 		if (mod != null)
 		{
-		  //System.out.print(f.getAbsolutePath() + "\t" + fileHash + "\t" + mod.getName());
 		  reportItem.setReportItemStatus(ReportItemStatus.IDENTIFIED);
 		  reportItem.setDescription(mod.getName());
-		  
 
 		  List<License> licenses = getLicense(httpHelper, mod);
 		  if (licenses != null)
 		  {
-			for (License license:licenses)
+			for (License license : licenses)
 			{
-			  reportItem.addLicense(license.getName());
+			  // some names have spaces and CR or LF in them
+			  String licenseStr = license.getName().trim();
+			  licenseStr = StringUtils.strip(licenseStr, "\n\r");
+
+			  reportItem.addLicense(licenseStr);
 			}
 		  }
 		  else
 		  {
-			 reportItem.setReportItemStatus(ReportItemStatus.NO_LICENSE_FOUND);
+			reportItem.setReportItemStatus(ReportItemStatus.NO_LICENSE_FOUND);
 		  }
 
 		}
