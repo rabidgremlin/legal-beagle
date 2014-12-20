@@ -49,7 +49,7 @@ public class Main
 	  jCommander.parse(args);
 
 	  log.info("Scanning {}", cmdOptions.dir);
-	  log.info("Writring output to {}", cmdOptions.outputFile);
+	  log.info("Writing output to {}", cmdOptions.outputFile);
 	}
 	catch (ParameterException e)
 	{
