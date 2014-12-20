@@ -4,10 +4,16 @@
 	<groupId>com.rabidgremlin.legalbeagle</groupId>
 	<artifactId>legalbeagle</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>0.5</version>
 	<name>legalbeagle</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/rabidgremlin/legal-beagle</url>
 	<dependencies>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.3</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

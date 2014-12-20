@@ -1,12 +1,12 @@
-legal-beagle
-============
+# Legal Beagle
+
 
 [![Build Status](https://travis-ci.org/rabidgremlin/legal-beagle.svg?branch=master)](https://travis-ci.org/rabidgremlin/legal-beagle)
 
 Tool to check licenses of components used in software. Currently identifies licenses for .jar files using file hashes and the Maven Central Repository ( http://search.maven.org/ )
 
-Usage
-=====
+## Usage
+
 
 ```
 Usage: java -jar legalbeagle.jar [options]
@@ -40,3 +40,6 @@ C:\play\one-page-web-app-starter\src\www\WEB-INF\lib\bcprov-jdk15-1.46.jar	IDENT
 C:\play\one-page-web-app-starter\src\www\WEB-INF\lib\cglib-2.2.1-v20090111.jar	IDENTIFIED	CGLIB	The Apache Software License, Version 2.0	
 C:\play\one-page-web-app-starter\src\www\WEB-INF\lib\commons-beanutils-1.9.1.jar	IDENTIFIED	Apache Commons BeanUtils	The Apache Software License, Version 2.0	
 ```
+
+## Releases
+Latest release can be downloaded from https://github.com/rabidgremlin/legal-beagle/releases
